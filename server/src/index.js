@@ -11,6 +11,7 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json({ limit: '2mb' }));
 app.use('/api', require('./mapping/routes'));
+app.use('/api', require('./tenant/routes'));
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -67,7 +68,8 @@ app.get('/api/onboarding', (req, res) => {
       ...state,
       customerName: customer?.name || 'Unknown',
       customerIndustry: customer?.industry || '',
-      customerRegion: customer?.region || ''
+      customerRegion: customer?.region || '',
+      tenantStatus: store.getTenantByCustomerId(state.customerId)?.status || null
     };
   });
   

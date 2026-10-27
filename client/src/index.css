@@ -305,3 +305,18 @@ button:disabled { opacity: 0.6; cursor: wait; }
 @media (max-width: 640px) {
   .mapping-toolbar, .saved-mappings li { flex-direction: column; align-items: stretch; }
 }
+
+/* Tenant Setup */
+.step-status.failed { background: #dc2626; color: white; }
+.tenant-meta { display: inline-flex; align-items: center; gap: 6px; }
+.tenant-badge { display: inline-block; border-radius: 9999px; padding: 1px 10px; font-size: 0.75rem; font-weight: 600; background: #f3f4f6; color: #4b5563; }
+.tenant-badge.pending { background: #f3f4f6; color: #374151; }
+.tenant-badge.provisioning { background: #fffbeb; color: #92400e; }
+.tenant-badge.active { background: #ecfdf5; color: #065f46; }
+.tenant-badge.failed { background: #fef2f2; color: #b91c1c; }
+.tenant-summary { display: flex; flex-wrap: wrap; gap: 12px 32px; margin-bottom: 20px; }
+.tenant-summary dt { font-size: 0.8rem; color: #6b7280; }
+.tenant-summary dd { font-weight: 500; }
+.tenant-form { margin-top: 24px; }
+.tenant-form .form-field .session-note { margin-top: 4px; }
+.tenant-failure { background: #fef2f2; border: 1px solid #fecaca; }

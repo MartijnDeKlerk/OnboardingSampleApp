@@ -177,7 +177,7 @@ Demo **whatever you reached**, no matter how small.
 - ✅ Dashboard (shows onboarding queue)
 - ✅ Customer Info (create, edit, validate, and save customer details)
 - ✅ Data Mapping (CSV repair review, column mapping, export and saved files)
-- ✅ Tenant Setup (placeholder)
+- ✅ Tenant Setup (pre-filled configuration, simulated provisioning, failure and retry)
 - ✅ Import (placeholder)
 
 ### Example Domain Models
@@ -188,7 +188,8 @@ Customer {
 }
 
 Tenant {
-  id, customerId, status, plan, createdAt
+  id, customerId, status, plan, subdomain, dataRegion, currency,
+  dateFormat, adminEmail, failureReason, createdAt, updatedAt, provisionedAt
 }
 
 OnboardingStep {
@@ -254,6 +255,9 @@ Intentionally boring and fast:
 | POST | `/api/mapping/preview` | Analyze CSV, propose repairs and preview mapped rows |
 | GET | `/api/customers/:id/mappings` | Saved source files and mappings for one customer |
 | POST | `/api/customers/:id/mappings` | Revalidate and save a prepared file; complete Data Mapping |
+| GET | `/api/customers/:id/tenant/defaults` | Suggested tenant settings from Customer Info (plan, unique subdomain, data region, currency, date format, admin email) |
+| GET | `/api/customers/:id/tenant` | The customer's tenant, including `status` (`pending`, `provisioning`, `active`, `failed`); 404 if none |
+| POST | `/api/customers/:id/tenant` | Validate settings and start (re-)provisioning; returns 202 `{ tenant, onboarding }`. Completes Tenant Setup when the tenant becomes `active` |
 
 ### Customer Info — first working slice
 
@@ -277,6 +281,23 @@ The same repair logic is available as a standalone script. It prints a report an
 npm run repair:csv -- input.csv repaired.csv
 npm run repair:csv -- input.csv repaired.csv --accept-repairs
 ```
+
+### Tenant Setup
+
+Choose a customer whose Customer Info is saved (Data Mapping is not required). The form is pre-filled from Customer Info and every field can be changed:
+
+| Setting | Default |
+|---------|---------|
+| Plan | `professional` (`starter`, `professional` or `enterprise`) |
+| Subdomain | Slug of the company name: lowercase `a-z`, `0-9` and hyphens, 3–40 characters, unique across tenants (`-2`, `-3`… is added when taken) |
+| Data region | `EU` when the customer region looks like the UK or Europe, otherwise `US` |
+| Currency | `GBP` for the UK, `EUR` for the rest of Europe, otherwise `USD` |
+| Date format | `DD/MM/YYYY` for the UK and Europe, otherwise `MM/DD/YYYY` |
+| Admin email | The customer's contact email |
+
+**Provision tenant** validates the settings on the server. Reserved subdomains (`admin`, `api`, `www`, `test`, `app`, `mail`, `support`) and subdomains used by another tenant are rejected before provisioning. The customer's existing tenant is reused (Acme's seeded `pending` tenant, for example). The tenant becomes `provisioning`, and the tab checks its status until it finishes about 1.5 seconds later. Set `TENANT_PROVISION_DELAY_MS` to change the delay. An `active` tenant completes only Tenant Setup (50% for a customer with Customer Info and Tenant Setup done); other steps keep their status.
+
+To demo a failure, use a subdomain starting with `fail-`. The tenant becomes `failed`, and the tab shows the reason with a **Retry provisioning** button. Change the settings and retry. An active tenant can be re-provisioned only when a setting changes; Tenant Setup stays complete while it re-provisions. Dashboard cards show each customer's tenant status: No tenant, Pending, Provisioning, Active or Failed.
 
 ---
 

@@ -151,3 +151,61 @@ module.exports = {
   addOnboardingState,
   updateOnboardingState
 };
+
+// --- Tenant Setup ---------------------------------------------------------
+// Appended (and exported separately) to keep the existing functions untouched.
+
+function setStepStatus(customerId, stepId, status) {
+  const current = getOnboardingState(customerId);
+  if (!current) return null;
+  const steps = current.steps.map(step => step.id === stepId ? { ...step, status } : step);
+  return updateOnboardingState(customerId, { steps, progressPercent: calculateProgress(steps) });
+}
+
+function isStepCompleted(customerId, stepId) {
+  return Boolean(getOnboardingState(customerId)?.steps.some(step => step.id === stepId && step.status === 'completed'));
+}
+
+function isSubdomainTaken(subdomain, exceptCustomerId) {
+  return store.tenants.some(tenant => tenant.customerId !== exceptCustomerId && tenant.subdomain === subdomain);
+}
+
+/**
+ * Creates or updates the customer's tenant with a validated configuration and
+ * marks it `provisioning`. Tenant Setup stays completed if it already was.
+ */
+function startTenantProvisioning(customerId, config) {
+  const now = new Date().toISOString();
+  let tenant = getTenantByCustomerId(customerId);
+  if (!tenant) tenant = addTenant(createTenant({ id: `tenant_${randomUUID()}`, customerId, createdAt: now }));
+  Object.assign(tenant, config, { status: 'provisioning', failureReason: null, updatedAt: now });
+  const onboarding = isStepCompleted(customerId, 'step_3')
+    ? getOnboardingState(customerId)
+    : setStepStatus(customerId, 'step_3', 'in_progress');
+  return { tenant: { ...tenant }, onboarding };
+}
+
+/**
+ * Finishes a provisioning run: success makes the tenant `active` and completes
+ * Tenant Setup; a failureReason makes it `failed` (an already completed Tenant
+ * Setup step stays completed). Returns null if the tenant is not provisioning.
+ */
+function finishTenantProvisioning(customerId, { failureReason } = {}) {
+  const tenant = getTenantByCustomerId(customerId);
+  if (!tenant || tenant.status !== 'provisioning') return null;
+  if (failureReason) {
+    Object.assign(tenant, { status: 'failed', failureReason });
+    if (!isStepCompleted(customerId, 'step_3')) setStepStatus(customerId, 'step_3', 'failed');
+  } else {
+    Object.assign(tenant, { status: 'active', failureReason: null, provisionedAt: new Date().toISOString() });
+    setStepStatus(customerId, 'step_3', 'completed');
+  }
+  return { tenant: { ...tenant }, onboarding: getOnboardingState(customerId) };
+}
+
+Object.assign(module.exports, {
+  isStepCompleted,
+  isSubdomainTaken,
+  startTenantProvisioning,
+  finishTenantProvisioning
+});
