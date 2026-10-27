@@ -305,3 +305,16 @@ button:disabled { opacity: 0.6; cursor: wait; }
 @media (max-width: 640px) {
   .mapping-toolbar, .saved-mappings li { flex-direction: column; align-items: stretch; }
 }
+
+.value-mapping { margin-top: 24px; }
+.value-mapping h4 { margin-bottom: 4px; }
+.value-mapping .session-note { margin: 0 0 8px; }
+.value-mapping-group { max-height: 300px; }
+.value-mapping-table caption { caption-side: top; text-align: left; font-weight: 600; padding: 10px 12px 4px; }
+.value-mapping-table th[scope="row"] { font-weight: 500; }
+.value-mapping-table select { min-width: 150px; width: auto; }
+.value-target { display: flex; align-items: center; gap: 10px; }
+.value-mapping-table tr.value-unmapped > * { background: #fef2f2; }
+.value-mapping-table tr.value-unmapped select { border-color: #f87171; }
+.issue-badge.suggested { background: #eff6ff; color: #1e40af; }
+.issue-badge.overridden { background: #f5f3ff; color: #5b21b6; }

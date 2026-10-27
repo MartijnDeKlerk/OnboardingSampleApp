@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import ValueMappingTable from './ValueMappingTable';
 
 async function requestJson(url, options = {}) {
   const response = await fetch(url, options);
@@ -34,6 +35,7 @@ export default function DataMappingTab({ selectedCustomerId, onSelectCustomer, o
   const [csv, setCsv] = useState('');
   const [fileName, setFileName] = useState('pasted.csv');
   const [mapping, setMapping] = useState(null);
+  const [valueMapping, setValueMapping] = useState(null);
   const [result, setResult] = useState(null);
   const [dirty, setDirty] = useState(false);
   const [acceptRepairs, setAcceptRepairs] = useState(false);
@@ -87,6 +89,7 @@ export default function DataMappingTab({ selectedCustomerId, onSelectCustomer, o
     setFileName(source.fileName || 'uploaded.csv');
     setDateFormat(source.dateFormat || 'auto');
     setMapping(source.columnMapping || null);
+    setValueMapping(source.valueMapping || null);
     setResult(null);
     invalidate();
   }
@@ -109,7 +112,19 @@ export default function DataMappingTab({ selectedCustomerId, onSelectCustomer, o
     finally { setBusy(false); }
   }
 
-  const requestBody = () => ({ csv, datasetType, dateFormat, ...(mapping ? { mapping } : {}) });
+  const requestBody = () => ({ csv, datasetType, dateFormat, ...(mapping ? { mapping } : {}), ...(valueMapping ? { valueMapping } : {}) });
+
+  function changeValueTarget(field, source, target) {
+    setValueMapping(current => {
+      const fieldMap = { ...current?.[field] };
+      if (target) fieldMap[source] = target;
+      else delete fieldMap[source];
+      const next = { ...current, [field]: fieldMap };
+      if (!Object.keys(fieldMap).length) delete next[field];
+      return Object.keys(next).length ? next : null;
+    });
+    invalidate();
+  }
 
   async function preview() {
     setBusy(true);
@@ -161,7 +176,7 @@ export default function DataMappingTab({ selectedCustomerId, onSelectCustomer, o
         </div>
         <div className="form-field">
           <label htmlFor="mapping-type">Data type</label>
-          <select id="mapping-type" value={datasetType} disabled={busy} onChange={event => { setDatasetType(event.target.value); setMapping(null); setResult(null); invalidate(); }}>
+          <select id="mapping-type" value={datasetType} disabled={busy} onChange={event => { setDatasetType(event.target.value); setMapping(null); setValueMapping(null); setResult(null); invalidate(); }}>
             {options.datasets.map(dataset => <option key={dataset.id} value={dataset.id}>{dataset.label}</option>)}
           </select>
         </div>
@@ -184,7 +199,7 @@ export default function DataMappingTab({ selectedCustomerId, onSelectCustomer, o
         </div>
         <div className="form-field">
           <label htmlFor="mapping-csv">CSV content</label>
-          <textarea id="mapping-csv" rows={7} spellCheck={false} value={csv} disabled={busy} onChange={event => { setCsv(event.target.value); setFileName('pasted.csv'); setMapping(null); invalidate(); }} placeholder="Paste a header row followed by your data…" />
+          <textarea id="mapping-csv" rows={7} spellCheck={false} value={csv} disabled={busy} onChange={event => { setCsv(event.target.value); setFileName('pasted.csv'); setMapping(null); setValueMapping(null); invalidate(); }} placeholder="Paste a header row followed by your data…" />
         </div>
         <div className="mapping-toolbar">
           <div className="form-field">
@@ -207,7 +222,7 @@ export default function DataMappingTab({ selectedCustomerId, onSelectCustomer, o
           <span>{result.normalizedDates} dates normalized</span>
         </div>
         {dirty && <p className="mapping-warning" role="status">Settings changed. Analyze and preview again before saving or downloading.</p>}
-        {result.detectedSource && <p className="session-note">Detected: {result.detectedSource}. Dates use {result.dateFormat} and export as YYYY-MM-DD. IDs keep leading zeros; amounts keep decimal precision. Status and category values are preserved.</p>}
+        {result.detectedSource && <p className="session-note">Detected: {result.detectedSource}. Dates use {result.dateFormat} and export as YYYY-MM-DD. IDs keep leading zeros; amounts keep decimal precision. {result.valueMappings ? 'Picklist values are mapped to target values below.' : 'Status and category values are preserved.'}</p>}
         {!!result.errors.length && <div className="mapping-warning" role="alert">
           <strong>Resolve these errors before saving. No rows will be silently discarded.</strong>
           <ul>{result.errors.slice(0, 50).map((issue, index) => <li key={index}>{issue.line ? `Line ${issue.line}: ` : ''}{issue.message}</li>)}</ul>
@@ -240,6 +255,7 @@ export default function DataMappingTab({ selectedCustomerId, onSelectCustomer, o
           <input type="checkbox" checked={acceptUnmapped} disabled={busy || dirty} onChange={event => setAcceptUnmapped(event.target.checked)} />
           I accept excluding these source columns from the mapped export: {result.unmappedHeaders.join(', ')}. They remain in the repaired source CSV.
         </label>}
+        <ValueMappingTable valueMappings={result.valueMappings} overrides={valueMapping} disabled={busy} onChange={changeValueTarget} />
         {!!result.preview.length && <details open className="mapped-preview">
           <summary>Mapped data preview (first {result.preview.length} of {result.totalRows} rows)</summary>
           <div className="table-scroll"><table className="data-table">
