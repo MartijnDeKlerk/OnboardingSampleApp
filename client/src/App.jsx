@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import CustomerInfoTab from './CustomerInfoTab';
 import DataMappingTab from './DataMappingTab';
+import ImportTab from './ImportTab';
 
 const TABS = [
   { id: 'dashboard', label: 'Dashboard' },
@@ -81,7 +82,12 @@ function App() {
           <PlaceholderTab title="Tenant Setup" description="Provision and configure customer tenant" />
         )}
         {activeTab === 'import' && (
-          <PlaceholderTab title="Import" description="Import customer data into the platform" />
+          <ImportTab
+            selectedCustomerId={selectedCustomerId}
+            onSelectCustomer={setSelectedCustomerId}
+            onSaved={() => setRefreshKey(value => value + 1)}
+            onOpenTab={setActiveTab}
+          />
         )}
       </main>
     </div>

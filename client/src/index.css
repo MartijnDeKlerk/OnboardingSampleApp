@@ -318,3 +318,20 @@ button:disabled { opacity: 0.6; cursor: wait; }
 .value-mapping-table tr.value-unmapped select { border-color: #f87171; }
 .issue-badge.suggested { background: #eff6ff; color: #1e40af; }
 .issue-badge.overridden { background: #f5f3ff; color: #5b21b6; }
+
+.import-readiness, .import-dry-run, .import-result { margin-top: 24px; }
+.import-readiness h3, .import-dry-run h3, .import-result h3 { margin-bottom: 12px; }
+.import-readiness .text-button { margin-left: auto; }
+.import-readiness .step-status.pending { background: #fef3c7; color: #92400e; }
+.import-counts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 16px 0; }
+.import-counts > div { background: #f9fafb; border-radius: 6px; padding: 8px 12px; }
+.import-counts dt { font-size: 0.8rem; color: #6b7280; }
+.import-counts dd { font-size: 1.25rem; font-weight: 500; }
+.import-issues-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.import-issues-table td:last-child { white-space: normal; min-width: 260px; }
+.import-result { border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; }
+.import-celebration { background: #ecfdf5; color: #065f46; border-radius: 6px; padding: 12px 16px; font-weight: 600; }
+@media (max-width: 640px) {
+  .import-counts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .import-issues-header { flex-direction: column; align-items: stretch; }
+}
