@@ -178,7 +178,7 @@ Demo **whatever you reached**, no matter how small.
 - ✅ Customer Info (create, edit, validate, and save customer details)
 - ✅ Data Mapping (CSV repair review, column mapping, export and saved files)
 - ✅ Tenant Setup (placeholder)
-- ✅ Import (placeholder)
+- ✅ Import (dry run, cross-file checks, import into the tenant, failed-rows report)
 
 ### Example Domain Models
 
@@ -254,6 +254,10 @@ Intentionally boring and fast:
 | POST | `/api/mapping/preview` | Analyze CSV, propose repairs and preview mapped rows |
 | GET | `/api/customers/:id/mappings` | Saved source files and mappings for one customer |
 | POST | `/api/customers/:id/mappings` | Revalidate and save a prepared file; complete Data Mapping |
+| POST | `/api/customers/:id/import/dry-run` | Check the four saved mappings against each other without importing (409 with `blockers` until Data Mapping is complete and the tenant is active) |
+| POST | `/api/customers/:id/import` | Re-run the dry run, then load the records into the tenant (400 if it finds errors); complete Import |
+| GET | `/api/customers/:id/import` | Last import result for one customer (404 if none) |
+| PUT | `/api/test-support/tenants/:customerId` | Test support only (disabled when `NODE_ENV=production`): set the tenant status `{ status }`; `active` also completes Tenant Setup |
 
 `POST /api/mapping/preview` and `POST /api/customers/:id/mappings` accept `{ csv, datasetType, mapping?, dateFormat?, valueMapping? }`. `valueMapping` is an optional override map `{ [fieldKey]: { [sourceValue]: targetValue } }`; missing entries (or `null` targets) fall back to the suggestions. The preview response includes `valueMappings: [{ field, label, targets, values: [{ source, count, suggested, target }] }]` (schema field order; values by count, then source). A saved mapping includes `valueMapping`, the fully resolved `{ [field]: { [source]: target } }` map.
 
@@ -281,6 +285,18 @@ The same repair logic is available as a standalone script. It prints a report an
 npm run repair:csv -- input.csv repaired.csv
 npm run repair:csv -- input.csv repaired.csv --accept-repairs
 ```
+
+### Import
+
+Choose a customer to see a readiness checklist: Customer Info saved, Data Mapping with all four data types saved, and an **active** tenant. Each unmet item links to its tab. **Run dry run** checks the saved mapped files together without changing anything. **Import into tenant** is enabled only after a dry run without errors. On reload the tab shows the customer's last import.
+
+The dry run (`POST /api/customers/:id/import/dry-run`) returns `409 { error, blockers: [{ code, message, ... }] }` when Data Mapping is incomplete (`data_mapping_incomplete`, with `missing` data types) or the tenant is missing (`tenant_missing`) or not active (`tenant_not_active`, with `tenantStatus`). Otherwise it returns `{ ready, counts: { accounts, clients, contacts, transactions }, issues: [{ datasetType, row, recordId, field, severity, message }] }`. `row` is the 1-based data row in the mapped file. Errors are: duplicate IDs within a data type, missing required fields, non-numeric amounts (and annual revenue), contacts or transactions referencing a client that is not in the mapped clients, transactions referencing an account that is not in the chart of accounts, and a parent account that does not exist or is the account itself (a blank parent is allowed). A transaction posted to an Inactive account is only a warning. `ready` is `true` when there are no errors.
+
+`POST /api/customers/:id/import` applies the same gate and checks, refuses with 400 when there are errors, and otherwise loads the records into an in-memory store for the tenant in the order accounts, clients, contacts, transactions. Each import replaces the tenant's previous import, so re-importing is idempotent. It returns `{ importId, importedAt, tenantId, counts, issues, onboarding }` and marks only Import complete. Onboarding reaches 100% (the customer is fully set up and we get paid) once all four steps are complete. The ABC sample imports cleanly: 39 accounts, 10 clients, 15 contacts and 25 transactions.
+
+Dry-run and import issues can be downloaded as a CSV failed-rows report (`datasetType,row,recordId,field,severity,message`), generated in the browser. Import logic lives in `server/src/import/`.
+
+Until the Tenant Setup flow can activate tenants, e2e tests use `PUT /api/test-support/tenants/:customerId`. To run e2e tests against a second stack, start the backend with `PORT=3003 npm start --prefix server` and the client with `API_PROXY_TARGET=http://localhost:3003 npx vite --port 5175` (from `client/`), then set `BASE_URL=http://localhost:5175`.
 
 ---
 

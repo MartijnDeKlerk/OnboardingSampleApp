@@ -11,6 +11,7 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json({ limit: '2mb' }));
 app.use('/api', require('./mapping/routes'));
+app.use('/api', require('./import/routes'));
 
 // Health check
 app.get('/api/health', (req, res) => {

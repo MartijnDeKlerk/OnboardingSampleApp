@@ -155,3 +155,35 @@ module.exports = {
   addOnboardingState,
   updateOnboardingState
 };
+
+// --- Import (step 4) -------------------------------------------------------
+// Imported records live in a per-tenant in-memory store. Each import replaces
+// the tenant's previous records, so re-importing the same data is idempotent.
+store.imports = new Map(); // tenantId -> { customerId, records, result }
+
+function saveImport(customerId, tenantId, records, result) {
+  store.imports.set(tenantId, { customerId, records, result });
+  const current = getOnboardingState(customerId);
+  const steps = current.steps.map(step => step.id === 'step_4' ? { ...step, status: 'completed' } : step);
+  const onboarding = updateOnboardingState(customerId, { steps, progressPercent: calculateProgress(steps) });
+  return { ...result, onboarding };
+}
+
+function getLastImport(customerId) {
+  const tenant = getTenantByCustomerId(customerId);
+  const saved = tenant && store.imports.get(tenant.id);
+  return saved && saved.customerId === customerId ? saved.result : null;
+}
+
+function getTenantRecords(tenantId) {
+  return store.imports.get(tenantId)?.records || null;
+}
+
+// Creates the customer's tenant or merges updates into it (tests and test support).
+function upsertTenant(customerId, updates) {
+  const tenant = getTenantByCustomerId(customerId);
+  if (tenant) return Object.assign(tenant, updates);
+  return addTenant(createTenant({ ...updates, customerId }));
+}
+
+Object.assign(module.exports, { saveImport, getLastImport, getTenantRecords, upsertTenant });
