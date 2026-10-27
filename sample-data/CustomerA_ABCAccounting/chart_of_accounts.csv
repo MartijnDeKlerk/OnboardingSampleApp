@@ -30,7 +30,7 @@ Account Number,Account Name,Account Type,Sub Type,Normal Balance,Status,Descript
 6000,Operating Expenses,Expense,Operating Expense,Debit,Active,General operating costs,
 6100,Salaries and Wages,Expense,Operating Expense,Debit,Active,Employee compensation,6000
 6200,Rent Expense,Expense,Operating Expense,Debit,Active,Office and facility rent,6000
-6300,Utilities,Expense,Operating Expense,Debit,Active,Electric, gas, water,6000
+6300,Utilities,Expense,Operating Expense,Debit,Active,"Electric, gas, water",6000
 6400,Insurance,Expense,Operating Expense,Debit,Active,Business insurance,6000
 6500,Office Supplies,Expense,Operating Expense,Debit,Active,General office supplies,6000
 6600,Professional Fees,Expense,Operating Expense,Debit,Active,Legal and accounting fees,6000
