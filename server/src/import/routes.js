@@ -3,7 +3,6 @@ const { randomUUID } = require('node:crypto');
 const store = require('../data/store');
 const { schemas } = require('../mapping/schemas');
 const { checkImport, IMPORT_ORDER } = require('./checks');
-const { calculateProgress } = require('../models');
 const router = express.Router();
 
 // Import needs every data type mapped and an active tenant to load into.
@@ -67,25 +66,6 @@ router.get('/customers/:id/import', (req, res) => {
   if (!result) return res.status(404).json({ error: 'No import has run for this customer yet.' });
   res.json(result);
 });
-
-// Test support: lets e2e tests put a customer's tenant into a given state
-// without the Tenant Setup flow. Disabled when NODE_ENV=production.
-if (process.env.NODE_ENV !== 'production') {
-  router.put('/test-support/tenants/:customerId', (req, res) => {
-    const customerId = req.params.customerId;
-    if (!store.getCustomerById(customerId)) return res.status(404).json({ error: 'Customer not found.' });
-    const status = req.body?.status;
-    if (!['pending', 'provisioning', 'active', 'failed'].includes(status)) return res.status(400).json({ error: 'Unknown tenant status.' });
-    const tenant = store.upsertTenant(customerId, { status });
-    // An active tenant means Tenant Setup is done, as provisioning would record.
-    const current = store.getOnboardingState(customerId);
-    if (current && status === 'active') {
-      const steps = current.steps.map(step => step.id === 'step_3' ? { ...step, status: 'completed' } : step);
-      store.updateOnboardingState(customerId, { steps, progressPercent: calculateProgress(steps) });
-    }
-    res.json(tenant);
-  });
-}
 
 module.exports = router;
 module.exports.getBlockers = getBlockers;

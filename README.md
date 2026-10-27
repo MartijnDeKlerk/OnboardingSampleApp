@@ -258,7 +258,6 @@ Intentionally boring and fast:
 | POST | `/api/customers/:id/import/dry-run` | Check the four saved mappings against each other without importing (409 with `blockers` until Data Mapping is complete and the tenant is active) |
 | POST | `/api/customers/:id/import` | Re-run the dry run, then load the records into the tenant (400 if it finds errors); complete Import |
 | GET | `/api/customers/:id/import` | Last import result for one customer (404 if none) |
-| PUT | `/api/test-support/tenants/:customerId` | Test support only (disabled when `NODE_ENV=production`): set the tenant status `{ status }`; `active` also completes Tenant Setup |
 | GET | `/api/customers/:id/tenant/defaults` | Suggested tenant settings from Customer Info (plan, unique subdomain, data region, currency, date format, admin email) |
 | GET | `/api/customers/:id/tenant` | The customer's tenant, including `status` (`pending`, `provisioning`, `active`, `failed`); 404 if none |
 | POST | `/api/customers/:id/tenant` | Validate settings and start (re-)provisioning; returns 202 `{ tenant, onboarding }`. Completes Tenant Setup when the tenant becomes `active` |
@@ -317,7 +316,7 @@ The dry run (`POST /api/customers/:id/import/dry-run`) returns `409 { error, blo
 
 Dry-run and import issues can be downloaded as a CSV failed-rows report (`datasetType,row,recordId,field,severity,message`), generated in the browser. Import logic lives in `server/src/import/`.
 
-Until the Tenant Setup flow can activate tenants, e2e tests use `PUT /api/test-support/tenants/:customerId`. To run e2e tests against a second stack, start the backend with `PORT=3003 npm start --prefix server` and the client with `API_PROXY_TARGET=http://localhost:3003 npx vite --port 5175` (from `client/`), then set `BASE_URL=http://localhost:5175`.
+To run e2e tests against a second stack, start the backend with `PORT=3003 npm start --prefix server` and the client with `API_PROXY_TARGET=http://localhost:3003 npx vite --port 5175` (from `client/`), then set `BASE_URL=http://localhost:5175`.
 
 ---
 

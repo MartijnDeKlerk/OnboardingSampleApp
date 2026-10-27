@@ -2,6 +2,7 @@ const { before, after, describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 const app = require('../index');
 const store = require('../data/store');
+const { setProvisionDelay } = require('../tenant/provisioner');
 
 const TYPES = ['clients', 'contacts', 'accounts', 'transactions'];
 
@@ -126,12 +127,18 @@ describe('Import API', () => {
     assert.equal(store.getTenantRecords(tenant.id).contacts.length, 15);
   });
 
-  it('reaches 100% once Tenant Setup is also complete (test-support tenant route)', async () => {
+  it('reaches 100% once Tenant Setup has provisioned an active tenant', async () => {
     const id = await createCustomer('Paid Customer');
     await mapAbcSamples(id);
-    const tenantResponse = await fetch(`${baseURL}/api/test-support/tenants/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'active' }) });
-    assert.equal(tenantResponse.status, 200);
-    assert.equal((await tenantResponse.json()).status, 'active');
+    setProvisionDelay(0);
+    const defaults = await (await fetch(`${baseURL}/api/customers/${id}/tenant/defaults`)).json();
+    assert.equal((await post(`/api/customers/${id}/tenant`, defaults)).status, 202);
+    let tenant;
+    for (let attempt = 0; attempt < 50 && tenant?.status !== 'active'; attempt++) {
+      await new Promise(resolve => setTimeout(resolve, 10));
+      tenant = await (await fetch(`${baseURL}/api/customers/${id}/tenant`)).json();
+    }
+    assert.equal(tenant.status, 'active');
     const result = await (await post(`/api/customers/${id}/import`)).json();
     assert.equal(result.onboarding.progressPercent, 100);
     assert.ok(result.onboarding.steps.every(step => step.status === 'completed'));

@@ -15,10 +15,12 @@ async function createCustomer(request, name) {
   return (await created.json()).customer;
 }
 
-// Tenant Setup is built separately; the test-support route stands in for provisioning.
+// Provisions the customer's tenant through Tenant Setup and waits until it is active.
 async function activateTenant(request, customerId) {
-  const response = await request.put(`/api/test-support/tenants/${customerId}`, { data: { status: 'active' } });
-  expect(response.ok()).toBeTruthy();
+  const defaults = await (await request.get(`/api/customers/${customerId}/tenant/defaults`)).json();
+  const response = await request.post(`/api/customers/${customerId}/tenant`, { data: defaults });
+  expect(response.status()).toBe(202);
+  await expect.poll(async () => (await (await request.get(`/api/customers/${customerId}/tenant`)).json()).status, { timeout: 10000 }).toBe('active');
 }
 
 async function openImport(page, customerId) {
