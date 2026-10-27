@@ -18,7 +18,15 @@
  * @property {string} customerId - Associated customer ID
  * @property {string} status - 'pending' | 'provisioning' | 'active' | 'failed'
  * @property {string} plan - 'starter' | 'professional' | 'enterprise'
+ * @property {string} subdomain - Unique tenant slug ('' until configured)
+ * @property {string} dataRegion - 'EU' | 'US' ('' until configured)
+ * @property {string} currency - 'GBP' | 'EUR' | 'USD' ('' until configured)
+ * @property {string} dateFormat - 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'YYYY-MM-DD' ('' until configured)
+ * @property {string} adminEmail - Tenant administrator email ('' until configured)
+ * @property {string|null} failureReason - Readable reason when status is 'failed'
  * @property {string} createdAt - ISO timestamp
+ * @property {string|null} updatedAt - ISO timestamp of the last configuration change
+ * @property {string|null} provisionedAt - ISO timestamp of the last successful provisioning
  */
 
 /**
@@ -63,7 +71,15 @@ function createTenant(data) {
     customerId: data.customerId || '',
     status: data.status || 'pending',
     plan: data.plan || 'starter',
-    createdAt: data.createdAt || new Date().toISOString()
+    subdomain: data.subdomain || '',
+    dataRegion: data.dataRegion || '',
+    currency: data.currency || '',
+    dateFormat: data.dateFormat || '',
+    adminEmail: data.adminEmail || '',
+    failureReason: data.failureReason || null,
+    createdAt: data.createdAt || new Date().toISOString(),
+    updatedAt: data.updatedAt || null,
+    provisionedAt: data.provisionedAt || null
   };
 }
 

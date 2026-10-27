@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import CustomerInfoTab from './CustomerInfoTab';
 import DataMappingTab from './DataMappingTab';
 import ImportTab from './ImportTab';
+import TenantSetupTab, { TenantBadge } from './TenantSetupTab';
 
 const TABS = [
   { id: 'dashboard', label: 'Dashboard' },
@@ -79,7 +80,12 @@ function App() {
           />
         )}
         {activeTab === 'tenant-setup' && (
-          <PlaceholderTab title="Tenant Setup" description="Provision and configure customer tenant" />
+          <TenantSetupTab
+            selectedCustomerId={selectedCustomerId}
+            onSelectCustomer={setSelectedCustomerId}
+            onSaved={() => setRefreshKey(value => value + 1)}
+            onCustomerInfo={() => setActiveTab('customer-info')}
+          />
         )}
         {activeTab === 'import' && (
           <ImportTab
@@ -125,6 +131,7 @@ function DashboardTab({ data, loading, error }) {
           <div className="customer-meta">
             <span>📍 {item.customerRegion}</span>
             <span>🏭 {item.customerIndustry}</span>
+            <span className="tenant-meta">Tenant: <TenantBadge status={item.tenantStatus} /></span>
           </div>
 
           <div className="progress-section">
