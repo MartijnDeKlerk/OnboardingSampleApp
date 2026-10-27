@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import CustomerInfoTab from './CustomerInfoTab';
 
 const TABS = [
   { id: 'dashboard', label: 'Dashboard' },
@@ -13,6 +14,8 @@ function App() {
   const [onboardingData, setOnboardingData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [selectedCustomerId, setSelectedCustomerId] = useState(null);
 
   useEffect(() => {
     fetch('/api/onboarding')
@@ -33,7 +36,7 @@ function App() {
         setOnboardingData([]);
         setLoading(false);
       });
-  }, []);
+  }, [refreshKey]);
 
   return (
     <div className="app">
@@ -59,7 +62,11 @@ function App() {
           <DashboardTab data={onboardingData} loading={loading} error={error} />
         )}
         {activeTab === 'customer-info' && (
-          <PlaceholderTab title="Customer Info" description="Collect and validate customer information" />
+          <CustomerInfoTab
+            selectedCustomerId={selectedCustomerId}
+            onSelectCustomer={setSelectedCustomerId}
+            onSaved={() => setRefreshKey(value => value + 1)}
+          />
         )}
         {activeTab === 'data-mapping' && (
           <PlaceholderTab title="Data Mapping" description="Map customer data to platform configuration" />

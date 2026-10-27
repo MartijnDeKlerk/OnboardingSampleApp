@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const store = require('./data/store');
+const { validateCustomerInfo } = require('./models/customer-info');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -18,6 +19,21 @@ app.get('/api/health', (req, res) => {
 app.get('/api/customers', (req, res) => {
   res.json(store.getCustomers());
 });
+
+function saveCustomerInfo(req, res) {
+  if (req.params.id && !store.getCustomerById(req.params.id)) {
+    return res.status(404).json({ error: 'Customer not found' });
+  }
+  const { customer, errors } = validateCustomerInfo(req.body);
+  if (Object.keys(errors).length) {
+    return res.status(400).json({ error: 'Check the highlighted fields.', errors });
+  }
+  const result = store.saveCustomerInfo(req.params.id, customer);
+  res.status(req.params.id ? 200 : 201).json(result);
+}
+
+app.post('/api/customers', saveCustomerInfo);
+app.put('/api/customers/:id', saveCustomerInfo);
 
 // Get customer by ID
 app.get('/api/customers/:id', (req, res) => {
@@ -66,7 +82,11 @@ app.get('/api/tenants/:customerId', (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Onboarding API server running at http://localhost:${PORT}`);
-  console.log(`   Health check: http://localhost:${PORT}/api/health`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`🚀 Onboarding API server running at http://localhost:${PORT}`);
+    console.log(`   Health check: http://localhost:${PORT}/api/health`);
+  });
+}
+
+module.exports = app;

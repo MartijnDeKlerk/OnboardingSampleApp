@@ -3,7 +3,8 @@
  * Simple storage for the training exercise - no database needed
  */
 
-const { createCustomer, createTenant, createDefaultOnboardingSteps } = require('../models');
+const { randomUUID } = require('node:crypto');
+const { createCustomer, createTenant, createDefaultOnboardingSteps, calculateProgress } = require('../models');
 
 // In-memory storage
 const store = {
@@ -62,6 +63,28 @@ function addCustomer(customer) {
   return customer;
 }
 
+function saveCustomerInfo(customerId, details) {
+  let customer = customerId ? getCustomerById(customerId) : null;
+  if (customerId && !customer) return null;
+
+  if (customer) {
+    Object.assign(customer, details);
+  } else {
+    customer = createCustomer({ ...details, id: `cust_${randomUUID()}` });
+    addCustomer(customer);
+  }
+
+  const current = getOnboardingState(customer.id);
+  const steps = (current?.steps || createDefaultOnboardingSteps()).map(step =>
+    step.id === 'step_1' ? { ...step, status: 'completed' } : step
+  );
+  const onboarding = { customerId: customer.id, steps, progressPercent: calculateProgress(steps) };
+  if (current) updateOnboardingState(customer.id, onboarding);
+  else addOnboardingState(onboarding);
+
+  return { customer, onboarding };
+}
+
 function getTenants() {
   return [...store.tenants];
 }
@@ -101,6 +124,7 @@ module.exports = {
   getCustomers,
   getCustomerById,
   addCustomer,
+  saveCustomerInfo,
   getTenants,
   getTenantByCustomerId,
   addTenant,

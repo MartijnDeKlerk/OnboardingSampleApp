@@ -175,7 +175,7 @@ Demo **whatever you reached**, no matter how small.
 
 ### Navigation Scaffold
 - ✅ Dashboard (shows onboarding queue)
-- ✅ Customer Info (placeholder)
+- ✅ Customer Info (create, edit, validate, and save customer details)
 - ✅ Data Mapping (placeholder)
 - ✅ Tenant Setup (placeholder)
 - ✅ Import (placeholder)
@@ -241,10 +241,20 @@ Intentionally boring and fast:
 |--------|----------|-------------|
 | GET | `/api/health` | Health check |
 | GET | `/api/customers` | List all customers |
+| POST | `/api/customers` | Validate and create a customer; complete Customer Info |
 | GET | `/api/customers/:id` | Get customer by ID |
+| PUT | `/api/customers/:id` | Validate and update customer details; complete Customer Info |
 | GET | `/api/customers/:id/onboarding` | Get onboarding state |
 | GET | `/api/onboarding` | Dashboard view (all states + customer info) |
 | GET | `/api/tenants/:customerId` | Get tenant by customer ID |
+
+### Customer Info — first working slice
+
+CS staff can select an existing customer or choose **Add customer**. The form uses the fields in the Customer model: company name, contact email, industry, and region. For this implementation, company name and a valid contact email are required; industry and region are optional. These required-field rules are a workshop implementation choice, not additional business requirements from the exercise.
+
+Saving trims surrounding whitespace, validates on the server, and marks only Customer Info complete (25% for a new onboarding). Later completed steps are preserved when editing. New customers appear on the dashboard; tenant provisioning remains a separate step. Data survives browser refreshes but resets when the backend restarts, as storage is in memory.
+
+For backend changes, use `npm run dev --prefix server` to restart automatically, or restart `npm start` manually. To test a running frontend on another port, use `BASE_URL=http://localhost:5174 npm run test:e2e`. An existing Chromium executable can be selected with `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`.
 
 ---
 
