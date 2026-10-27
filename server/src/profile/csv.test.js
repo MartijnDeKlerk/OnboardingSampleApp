@@ -1,6 +1,6 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const { parseCsv, toRecords } = require('./csv');
+const { parseCsv, toRecords, stringifyCsv } = require('./csv');
 
 describe('parseCsv', () => {
   it('splits simple rows and skips blank lines', () => {
@@ -82,5 +82,27 @@ describe('toRecords', () => {
     assert.deepEqual(records[0].values, { a: '1', b: '2', c: '' });
     assert.equal(issues[0].field, 'c');
     assert.equal(issues[0].severity, 'warning');
+  });
+});
+
+describe('strict import parsing and export', () => {
+  it('rejects malformed quoting when strict mode is requested', () => {
+    for (const text of ['id,name\n1,"unclosed', 'id,name\n1,un"quoted', 'id,name\n1,"closed"extra']) {
+      assert.throws(() => parseCsv(text, { strict: true }));
+    }
+  });
+
+  it('reports physical lines and raw records without changing the default interface', () => {
+    const text = 'id,name\r\n\r\n1,"First\nSecond"\r\n2,Other';
+    const records = parseCsv(text, { strict: true, info: true });
+    assert.equal(records[1].info.lines, 4);
+    assert.equal(records[1].raw, '1,"First\nSecond"\r\n');
+    assert.deepEqual(records.map(entry => entry.record), parseCsv(text));
+  });
+
+  it('escapes commas, quotes and newlines when exporting CSV', () => {
+    const rows = [['id', 'text'], ['001', 'A, "quoted" value'], ['002', 'First\nSecond']];
+    assert.equal(stringifyCsv(rows), 'id,text\n001,"A, ""quoted"" value"\n002,"First\nSecond"\n');
+    assert.deepEqual(parseCsv(stringifyCsv(rows), { strict: true }), rows);
   });
 });

@@ -10,7 +10,8 @@ const { createCustomer, createTenant, createDefaultOnboardingSteps, calculatePro
 const store = {
   customers: [],
   tenants: [],
-  onboardingStates: []
+  onboardingStates: [],
+  dataMappings: []
 };
 
 // Seed with example data
@@ -89,6 +90,21 @@ function getTenants() {
   return [...store.tenants];
 }
 
+function getCustomerMappings(customerId) {
+  return store.dataMappings.filter(mapping => mapping.customerId === customerId);
+}
+
+function saveDataMapping(customerId, mapping) {
+  const saved = { ...mapping, customerId, savedAt: new Date().toISOString() };
+  const index = store.dataMappings.findIndex(item => item.customerId === customerId && item.datasetType === saved.datasetType);
+  if (index === -1) store.dataMappings.push(saved);
+  else store.dataMappings[index] = saved;
+  const current = getOnboardingState(customerId);
+  const steps = current.steps.map(step => step.id === 'step_2' ? { ...step, status: 'completed' } : step);
+  const onboarding = updateOnboardingState(customerId, { steps, progressPercent: calculateProgress(steps) });
+  return { mapping: saved, onboarding };
+}
+
 function getTenantByCustomerId(customerId) {
   return store.tenants.find(t => t.customerId === customerId);
 }
@@ -125,6 +141,8 @@ module.exports = {
   getCustomerById,
   addCustomer,
   saveCustomerInfo,
+  getCustomerMappings,
+  saveDataMapping,
   getTenants,
   getTenantByCustomerId,
   addTenant,

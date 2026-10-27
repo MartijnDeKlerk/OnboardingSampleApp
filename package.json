@@ -9,7 +9,8 @@
     "install:all": "npm install && cd server && npm install && cd ../client && npm install",
     "test": "npm run test:unit && npm run test:e2e",
     "test:unit": "node --test scripts/check-node.test.js && cd server && npm test",
-    "test:e2e": "npx playwright test"
+    "test:e2e": "npx playwright test",
+    "repair:csv": "node scripts/repair-csv.js"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",

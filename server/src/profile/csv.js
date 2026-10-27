@@ -1,19 +1,33 @@
 // Minimal RFC 4180-style CSV parser: quoted fields, escaped quotes ("") and
 // embedded commas/newlines inside quotes. Handles CRLF/LF and a leading BOM.
 // Returns an array of rows, each an array of raw string fields. Blank lines are skipped.
-function parseCsv(text) {
+// Import previews opt into strict quoting and physical-line/raw-record metadata.
+// Existing profiling callers keep the original array-of-rows interface.
+function parseCsv(text, { strict = false, info = false } = {}) {
   const input = String(text ?? '').replace(/^﻿/, '');
   const rows = [];
   let row = [];
   let field = '';
   let inQuotes = false;
   let i = 0;
+  let line = 1;
+  let start = 0;
+  let closedQuote = false;
 
-  const endField = () => { row.push(field); field = ''; };
-  const endRow = () => {
+  const fail = message => {
+    const error = new Error(`${message} at line ${line}.`);
+    error.lines = line;
+    throw error;
+  };
+
+  const endField = () => { row.push(field); field = ''; closedQuote = false; };
+  const endRow = end => {
     endField();
-    if (!(row.length === 1 && row[0].trim() === '')) rows.push(row);
+    if (!(row.length === 1 && row[0].trim() === '')) {
+      rows.push(info ? { record: row, raw: input.slice(start, end), info: { lines: line } } : row);
+    }
     row = [];
+    start = end;
   };
 
   while (i < input.length) {
@@ -21,18 +35,33 @@ function parseCsv(text) {
     if (inQuotes) {
       if (ch === '"') {
         if (input[i + 1] === '"') { field += '"'; i += 2; continue; }
-        inQuotes = false; i += 1; continue;
+        inQuotes = false; closedQuote = true; i += 1; continue;
       }
+      if (ch === '\n' || (ch === '\r' && input[i + 1] !== '\n')) line += 1;
       field += ch; i += 1; continue;
     }
-    if (ch === '"' && field.trim() === '') { field = ''; inQuotes = true; i += 1; continue; }
+    if (strict && closedQuote && ![',', '\r', '\n'].includes(ch)) fail('Unexpected character after a closing quote');
+    if (ch === '"' && field.trim() === '') {
+      if (strict && field !== '') fail('Unexpected whitespace before an opening quote');
+      field = ''; inQuotes = true; i += 1; continue;
+    }
+    if (strict && ch === '"') fail('Unexpected quote inside an unquoted field');
     if (ch === ',') { endField(); i += 1; continue; }
-    if (ch === '\r' && input[i + 1] === '\n') { endRow(); i += 2; continue; }
-    if (ch === '\n' || ch === '\r') { endRow(); i += 1; continue; }
+    if (ch === '\r' && input[i + 1] === '\n') { endRow(i + 2); line += 1; i += 2; continue; }
+    if (ch === '\n' || ch === '\r') { endRow(i + 1); line += 1; i += 1; continue; }
     field += ch; i += 1;
   }
-  if (field !== '' || row.length) endRow();
+  if (strict && inQuotes) fail('Unclosed quoted field');
+  if (field !== '' || row.length) endRow(i);
   return rows;
+}
+
+function stringifyCsv(rows) {
+  if (!rows.length) return '';
+  return rows.map(row => row.map(value => {
+    const text = String(value ?? '');
+    return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+  }).join(',')).join('\n') + '\n';
 }
 
 // Turns parsed rows into records keyed by header, with a 1-based data row number.
@@ -83,4 +112,4 @@ function toRecords(rows, { file, fieldFor = h => h, mergeInto, acceptMerge = () 
   return { header, records, issues };
 }
 
-module.exports = { parseCsv, toRecords };
+module.exports = { parseCsv, toRecords, stringifyCsv };

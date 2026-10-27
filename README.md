@@ -176,7 +176,7 @@ Demo **whatever you reached**, no matter how small.
 ### Navigation Scaffold
 - ✅ Dashboard (shows onboarding queue)
 - ✅ Customer Info (create, edit, validate, and save customer details)
-- ✅ Data Mapping (placeholder)
+- ✅ Data Mapping (CSV repair review, column mapping, export and saved files)
 - ✅ Tenant Setup (placeholder)
 - ✅ Import (placeholder)
 
@@ -249,6 +249,11 @@ Intentionally boring and fast:
 | GET | `/api/tenants/:customerId` | Get tenant by customer ID |
 | GET | `/api/sample-data` | List customer sample-data folders (`[{ id, label }]`, sorted by id) |
 | GET | `/api/sample-data/:id/profile` | Profile one sample-data folder: suggested customer info, schema style, date format, currency, record counts, normalised clients/contacts and data-quality issues (404 for unknown ids) |
+| GET | `/api/mapping/options` | Supported data types, target fields and sample-file catalog |
+| GET | `/api/mapping/samples/:sampleId` | Original CSV text for an allowlisted sample file |
+| POST | `/api/mapping/preview` | Analyze CSV, propose repairs and preview mapped rows |
+| GET | `/api/customers/:id/mappings` | Saved source files and mappings for one customer |
+| POST | `/api/customers/:id/mappings` | Revalidate and save a prepared file; complete Data Mapping |
 
 ### Customer Info — first working slice
 
@@ -257,6 +262,21 @@ CS staff can select an existing customer or choose **Add customer**. The form us
 Saving trims surrounding whitespace, validates on the server, and marks only Customer Info complete (25% for a new onboarding). Later completed steps are preserved when editing. New customers appear on the dashboard; tenant provisioning remains a separate step. Data survives browser refreshes but resets when the backend restarts, as storage is in memory.
 
 For backend changes, use `npm run dev --prefix server` to restart automatically, or restart `npm start` manually. To test a running frontend on another port, use `BASE_URL=http://localhost:5174 npm run test:e2e`. An existing Chromium executable can be selected with `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`.
+
+### Data Mapping
+
+Choose a customer and a data type (clients, contacts, chart of accounts, or transactions). Upload CSV, paste its contents, or load one of the 12 repository samples. Analyze the file to review proposed repairs, source-to-target column assignments, date normalization and the first 10 mapped rows. Source files are limited to 500 KB and 5,000 data rows. Client/contact aliases and date parsing reuse the existing profiling modules; strict CSV validation and export extend the shared parser.
+
+Known unquoted name and description fields can be proposed for repair. Every proposal includes the original row, corrected row and reason, and requires acceptance before export or saving. Unknown row-shape errors, missing required values, invalid dates/numbers and duplicate IDs block saving. Source columns excluded from the mapped export require explicit acceptance. IDs retain leading zeros, amounts stay precise decimal strings, and status/category values are preserved.
+
+Repaired-source and mapped CSV downloads are separate. Saving revalidates the original input on the server, preserves both source and prepared files, and completes only Data Mapping after Customer Info is complete (normally 50% overall progress). This workshop slice accepts one valid file to complete the step; saving another file of the same data type replaces that customer's earlier file. Tenant provisioning and data import remain separate. Saved files and mappings can be reloaded during the workshop session; a backend restart resets in-memory storage.
+
+The same repair logic is available as a standalone script. It prints a report and exits with status 2 if repairs need acceptance, or 1 if errors cannot be repaired. It writes only to a separate, previously nonexistent output file:
+
+```bash
+npm run repair:csv -- input.csv repaired.csv
+npm run repair:csv -- input.csv repaired.csv --accept-repairs
+```
 
 ---
 

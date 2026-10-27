@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import CustomerInfoTab from './CustomerInfoTab';
+import DataMappingTab from './DataMappingTab';
 
 const TABS = [
   { id: 'dashboard', label: 'Dashboard' },
@@ -69,7 +70,12 @@ function App() {
           />
         )}
         {activeTab === 'data-mapping' && (
-          <PlaceholderTab title="Data Mapping" description="Map customer data to platform configuration" />
+          <DataMappingTab
+            selectedCustomerId={selectedCustomerId}
+            onSelectCustomer={setSelectedCustomerId}
+            onSaved={() => setRefreshKey(value => value + 1)}
+            onCustomerInfo={() => setActiveTab('customer-info')}
+          />
         )}
         {activeTab === 'tenant-setup' && (
           <PlaceholderTab title="Tenant Setup" description="Provision and configure customer tenant" />
