@@ -318,3 +318,65 @@ button:disabled { opacity: 0.6; cursor: wait; }
 .value-mapping-table tr.value-unmapped select { border-color: #f87171; }
 .issue-badge.suggested { background: #eff6ff; color: #1e40af; }
 .issue-badge.overridden { background: #f5f3ff; color: #5b21b6; }
+
+/* Data Mapping: steps, source data table and preview tables */
+.mapping-step { border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; }
+.mapping-step + .mapping-step { margin-top: 20px; }
+.mapping-step .step-heading { display: flex; align-items: center; gap: 10px; font-size: 1.1rem; margin: 0 0 16px; }
+.step-number { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%; background: #2563eb; color: white; font-size: 0.85rem; font-weight: 600; }
+.mapping-save .session-note { margin-top: 10px; }
+.mapping-load { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; align-items: end; margin-bottom: 18px; }
+.mapping-load .sample-picker, .mapping-load .file-upload { margin: 0; }
+.mapping-load .file-upload input { padding: 7px 12px; }
+.csv-field-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; margin-bottom: 6px; }
+.csv-field-head label { margin-bottom: 0; }
+.view-toggle { display: inline-flex; border: 1px solid #d1d5db; border-radius: 6px; overflow: hidden; }
+.view-toggle button { border: 0; background: white; color: #4b5563; padding: 5px 12px; font: inherit; font-size: 0.85rem; cursor: pointer; }
+.view-toggle button + button { border-left: 1px solid #d1d5db; }
+.view-toggle button:hover { background: #eff6ff; color: #2563eb; }
+.view-toggle button[aria-pressed="true"] { background: #2563eb; color: white; }
+.view-toggle button:focus-visible { outline: 2px solid #2563eb; outline-offset: -2px; }
+
+.csv-table-meta, .csv-table-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 16px; font-size: 0.85rem; color: #6b7280; }
+.csv-table-meta strong { color: #333; font-weight: 600; word-break: break-all; }
+.csv-table-footer { justify-content: flex-start; }
+.form-field .csv-filter { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-weight: 400; cursor: pointer; }
+.form-field .csv-filter input { width: auto; padding: 0; margin: 0; }
+.csv-scroll { max-height: 440px; margin: 8px 0; }
+.csv-scroll:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+.csv-table th, .csv-table td { padding: 7px 12px; font-variant-numeric: tabular-nums; }
+.csv-table thead th { vertical-align: bottom; border-bottom: 1px solid #d1d5db; }
+.csv-table tbody tr:nth-child(even) > * { background: #f9fafb; }
+.csv-table tbody tr:hover > * { background: #eff6ff; }
+.csv-header { display: block; font-weight: 600; color: #374151; }
+.csv-target { display: block; font-size: 0.75rem; font-weight: 500; color: #2563eb; }
+.csv-target-none { color: #9ca3af; font-weight: 400; font-style: italic; }
+.csv-key { color: #6b7280; font-weight: 400; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.csv-line { position: sticky; left: 0; background: white; color: #9ca3af; font-weight: 400; text-align: right; border-right: 1px solid #e5e7eb; }
+.csv-table thead .csv-line { z-index: 2; background: #f8fafc; }
+.csv-numeric { text-align: right; }
+.csv-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; }
+.csv-blank { color: #d1d5db; }
+.csv-table td.csv-extra { background: #fff7ed; }
+.csv-empty { padding: 12px 0; }
+.csv-table tbody tr.csv-row-repair > * { background: #fffbeb; }
+.csv-table tbody tr.csv-row-error > * { background: #fef2f2; }
+.csv-table tbody tr.csv-row-repair > .csv-line { box-shadow: inset 3px 0 #f59e0b; }
+.csv-table tbody tr.csv-row-error > .csv-line { box-shadow: inset 3px 0 #dc2626; }
+.csv-flag { display: inline-block; margin-left: 6px; border-radius: 9999px; padding: 0 6px; font-size: 0.7rem; font-weight: 600; vertical-align: 1px; }
+.csv-flag.repair { background: #fde68a; color: #92400e; }
+.csv-flag.error { background: #fecaca; color: #991b1b; }
+.value-tag { display: inline-block; margin-left: 6px; border-radius: 9999px; padding: 0 7px; font-size: 0.72rem; font-weight: 500; background: #eff6ff; color: #1e40af; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+.value-tag.missing { background: #fef2f2; color: #b91c1c; }
+.mapping-subheading { margin: 24px 0 4px; }
+.saved-count { font-weight: 400; font-size: 0.9rem; color: #6b7280; }
+
+@media (max-width: 640px) {
+  .mapping-step { padding: 14px; }
+  .mapping-load { grid-template-columns: 1fr; gap: 14px; }
+  .csv-table th, .csv-table td { padding: 6px 10px; }
+  .csv-flag { font-size: 0; width: 8px; height: 8px; padding: 0; vertical-align: middle; }
+  .csv-flag.repair { background: #f59e0b; }
+  .csv-flag.error { background: #dc2626; }
+  .mapping-summary { padding: 12px 14px; gap: 6px 16px; }
+}
