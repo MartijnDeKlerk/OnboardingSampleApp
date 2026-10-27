@@ -84,6 +84,33 @@ describe('Data Mapping API', () => {
     assert.equal(store.getCustomerMappings(customerId).length, 1, 'saving the same dataset replaces it');
   });
 
+  it('previews value mappings, blocks unmapped values and persists the resolved value mapping', async () => {
+    const options = await (await fetch(`${baseURL}/api/mapping/options`)).json();
+    const status = options.datasets.find(dataset => dataset.id === 'clients').fields.find(field => field.key === 'status');
+    assert.deepEqual(status.targets, ['Active', 'Inactive', 'Pending']);
+    const csv = (await (await fetch(`${baseURL}/api/mapping/samples/premier-clients`)).json()).csv.replace(',DORMANT,', ',ARCHIVED,');
+    const body = { csv, datasetType: 'clients', fileName: 'clients.csv' };
+    const preview = await (await post('/api/mapping/preview', body)).json();
+    assert.deepEqual(preview.errors, [{ line: null, message: 'Map every value for Status: "ARCHIVED"' }]);
+    assert.deepEqual(preview.valueMappings.map(entry => entry.field), ['entityType', 'status']);
+    const blocked = await post(`/api/customers/${customerId}/mappings`, body);
+    assert.equal(blocked.status, 400);
+    assert.equal(store.getCustomerMappings(customerId).some(mapping => mapping.fileName === 'clients.csv'), false);
+
+    const response = await post(`/api/customers/${customerId}/mappings`, { ...body, valueMapping: { status: { ARCHIVED: 'Inactive', SUSPENDED: 'Inactive' } } });
+    assert.equal(response.status, 200);
+    const saved = await response.json();
+    const expected = {
+      entityType: { 'Limited Company': 'Corporation', 'Sole Trader': 'Sole Proprietor', LLP: 'LLC', Partnership: 'Partnership' },
+      status: { ACTIVE: 'Active', ARCHIVED: 'Inactive', SUSPENDED: 'Inactive' }
+    };
+    assert.deepEqual(saved.mapping.valueMapping, expected);
+    assert.ok(saved.mapping.mappedCsv.includes(',Corporation,Inactive,'));
+    assert.ok(!saved.mapping.mappedCsv.includes('SUSPENDED'));
+    const restored = await (await fetch(`${baseURL}/api/customers/${customerId}/mappings`)).json();
+    assert.deepEqual(restored.find(mapping => mapping.datasetType === 'clients').valueMapping, expected);
+  });
+
   it('returns JSON for malformed JSON and rejects nonexistent customers', async () => {
     const malformed = await fetch(`${baseURL}/api/mapping/preview`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{' });
     assert.equal(malformed.status, 400);
