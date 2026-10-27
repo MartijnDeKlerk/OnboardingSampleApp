@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const store = require('./data/store');
 const { validateCustomerInfo } = require('./models/customer-info');
+const { listSampleData, loadProfile } = require('./profile/sample-data');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -79,6 +80,28 @@ app.get('/api/tenants/:customerId', (req, res) => {
     return res.status(404).json({ error: 'Tenant not found' });
   }
   res.json(tenant);
+});
+
+// Customer sample-data folders available for profiling
+app.get('/api/sample-data', async (req, res, next) => {
+  try {
+    res.json(await listSampleData());
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Pre-fill suggestion and data-quality summary for one sample-data folder
+app.get('/api/sample-data/:id/profile', async (req, res, next) => {
+  try {
+    const profile = await loadProfile(req.params.id);
+    if (!profile) {
+      return res.status(404).json({ error: 'Sample data not found' });
+    }
+    res.json(profile);
+  } catch (error) {
+    next(error);
+  }
 });
 
 // Start server

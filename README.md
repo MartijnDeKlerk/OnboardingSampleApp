@@ -247,6 +247,8 @@ Intentionally boring and fast:
 | GET | `/api/customers/:id/onboarding` | Get onboarding state |
 | GET | `/api/onboarding` | Dashboard view (all states + customer info) |
 | GET | `/api/tenants/:customerId` | Get tenant by customer ID |
+| GET | `/api/sample-data` | List customer sample-data folders (`[{ id, label }]`, sorted by id) |
+| GET | `/api/sample-data/:id/profile` | Profile one sample-data folder: suggested customer info, schema style, date format, currency, record counts, normalised clients/contacts and data-quality issues (404 for unknown ids) |
 
 ### Customer Info — first working slice
 
