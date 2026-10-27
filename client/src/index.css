@@ -334,6 +334,8 @@ button:disabled { opacity: 0.6; cursor: wait; }
 @media (max-width: 640px) {
   .import-counts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .import-issues-header { flex-direction: column; align-items: stretch; }
+}
+
 /* Data Mapping: steps, source data table and preview tables */
 .mapping-step { border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; }
 .mapping-step + .mapping-step { margin-top: 20px; }
