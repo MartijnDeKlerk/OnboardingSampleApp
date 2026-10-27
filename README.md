@@ -270,7 +270,7 @@ CS staff can select an existing customer or choose **Add customer**. The form us
 
 Saving trims surrounding whitespace, validates on the server, and marks only Customer Info complete (25% for a new onboarding). Later completed steps are preserved when editing. New customers appear on the dashboard; tenant provisioning remains a separate step. Data survives browser refreshes but resets when the backend restarts, as storage is in memory.
 
-For backend changes, use `npm run dev --prefix server` to restart automatically, or restart `npm start` manually. To test a running frontend on another port, use `BASE_URL=http://localhost:5174 npm run test:e2e`. An existing Chromium executable can be selected with `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`.
+For backend changes, use `npm run dev --prefix server` to restart automatically, or restart `npm start` manually. `npm run test:e2e` starts its own isolated stack (API on 3101, client on 5174), so test customers never appear in the app you use on 3001/5173. To test an already running frontend instead, set `BASE_URL`, e.g. `BASE_URL=http://localhost:5175 npm run test:e2e`. An existing Chromium executable can be selected with `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`.
 
 ### Data Mapping
 

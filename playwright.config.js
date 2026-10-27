@@ -1,6 +1,10 @@
 // @ts-check
 const { defineConfig, devices } = require('@playwright/test');
-const baseURL = process.env.BASE_URL || 'http://localhost:5173';
+// E2E runs against its own stack (API 3101, client 5174) so test customers never
+// show up in the app you're using on 3001/5173. Set BASE_URL to target another stack.
+const E2E_API_PORT = 3101;
+const E2E_CLIENT_PORT = 5174;
+const baseURL = process.env.BASE_URL || `http://localhost:${E2E_CLIENT_PORT}`;
 
 module.exports = defineConfig({
   testDir: './tests/e2e',
@@ -24,10 +28,22 @@ module.exports = defineConfig({
       },
     },
   ],
-  webServer: {
-    command: 'npm start',
-    url: baseURL,
-    reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
-  },
+  webServer: process.env.BASE_URL ? undefined : [
+    {
+      command: 'node src/index.js',
+      cwd: './server',
+      env: { PORT: String(E2E_API_PORT) },
+      url: `http://localhost:${E2E_API_PORT}/api/health`,
+      reuseExistingServer: !process.env.CI,
+      timeout: 60 * 1000,
+    },
+    {
+      command: `npx vite --port ${E2E_CLIENT_PORT} --strictPort`,
+      cwd: './client',
+      env: { API_PROXY_TARGET: `http://localhost:${E2E_API_PORT}` },
+      url: baseURL,
+      reuseExistingServer: !process.env.CI,
+      timeout: 120 * 1000,
+    },
+  ],
 });
