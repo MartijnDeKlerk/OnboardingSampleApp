@@ -230,3 +230,46 @@ button:disabled { opacity: 0.6; cursor: wait; }
   .app { padding: 12px; }
   .content { padding: 20px; }
 }
+
+.sample-prefill {
+  padding-bottom: 24px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.sample-prefill-controls { display: flex; align-items: flex-end; gap: 12px; margin-bottom: 8px; }
+.sample-prefill-controls .form-field { flex: 1; }
+.sample-prefill .feedback { margin-top: 12px; }
+.info-message { background: #eff6ff; color: #1e40af; }
+
+.sample-summary {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 24px;
+}
+
+.sample-summary h3 { font-size: 1.05rem; margin-bottom: 12px; }
+.sample-summary-facts, .sample-summary-counts { display: grid; gap: 12px; margin-bottom: 16px; }
+.sample-summary-facts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.sample-summary-counts { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.sample-summary dt { font-size: 0.8rem; color: #6b7280; }
+.sample-summary dd { font-weight: 500; }
+.sample-summary-counts > div { background: #f9fafb; border-radius: 6px; padding: 8px 12px; }
+.sample-summary-counts dd { font-size: 1.25rem; }
+.sample-issues-heading { font-size: 0.95rem; margin-bottom: 6px; }
+.sample-issues-none { color: #065f46; font-size: 0.9rem; }
+.sample-issues-totals { color: #6b7280; font-size: 0.85rem; margin-bottom: 8px; }
+.sample-issues { list-style: none; }
+.sample-issue { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px solid #f3f4f6; font-size: 0.9rem; }
+.sample-issue:last-child { border-bottom: none; }
+.issue-location { font-weight: 500; }
+.issue-badge { flex-shrink: 0; border-radius: 9999px; padding: 1px 8px; font-size: 0.75rem; font-weight: 600; }
+.issue-badge.error { background: #fef2f2; color: #b91c1c; }
+.issue-badge.warning { background: #fffbeb; color: #92400e; }
+.link-button { background: none; border: none; color: #2563eb; font: inherit; font-size: 0.9rem; cursor: pointer; padding: 6px 0; text-decoration: underline; }
+
+@media (max-width: 640px) {
+  .sample-prefill-controls { align-items: stretch; flex-direction: column; }
+  .sample-summary-facts, .sample-summary-counts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
