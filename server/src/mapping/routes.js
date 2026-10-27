@@ -3,6 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { schemas } = require('./schemas');
 const { analyzeCsv } = require('./csv');
+const { resolveValueMapping } = require('./values');
 const store = require('../data/store');
 const router = express.Router();
 
@@ -60,6 +61,7 @@ router.post('/customers/:id/mappings', (req, res) => {
     fileName: typeof body.fileName === 'string' ? body.fileName.slice(0, 200) : 'uploaded.csv',
     originalCsv: body.csv,
     columnMapping: analysis.mapping,
+    valueMapping: resolveValueMapping(analysis.valueMappings),
     dateFormat: body.dateFormat || 'auto',
     correctedCsv: analysis.correctedCsv,
     mappedCsv: analysis.mappedCsv,

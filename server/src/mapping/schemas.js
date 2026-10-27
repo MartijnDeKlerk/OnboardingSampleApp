@@ -1,4 +1,5 @@
 const { CLIENT_FIELDS, CONTACT_FIELDS, headerKey } = require('../profile/schema');
+const { getTargets } = require('./values');
 
 // Reuse existing client/contact aliases. Only the extra contact fields and the
 // account/transaction aliases extend the shared profiling schema.
@@ -56,7 +57,9 @@ const schemas = Object.fromEntries(Object.entries(definitions).map(([id, [label,
   id, label,
   fields: fields.map(([key, label, required, type, ...aliases]) => ({
     key, label, required, type,
-    aliases: (id === 'clients' ? CLIENT_FIELDS[key] : id === 'contacts' ? CONTACT_FIELDS[key] : null) || aliases
+    aliases: (id === 'clients' ? CLIENT_FIELDS[key] : id === 'contacts' ? CONTACT_FIELDS[key] : null) || aliases,
+    // Picklist fields carry their canonical target values (see values.js).
+    ...(getTargets(id, key) && { targets: getTargets(id, key) })
   }))
 }]));
 const normalizeHeader = headerKey;

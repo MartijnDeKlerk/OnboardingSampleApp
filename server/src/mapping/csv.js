@@ -1,6 +1,7 @@
 const { parseCsv, toRecords, stringifyCsv } = require('../profile/csv');
 const { parseDate } = require('../profile/schema');
 const { schemas, normalizeHeader, detectSource } = require('./schemas');
+const { isValidValueMapping, buildValueMappings } = require('./values');
 
 const MAX_BYTES = 500000;
 const MAX_ROWS = 5000;
@@ -84,7 +85,7 @@ function normalizeDate(value, format) {
   return normalized && Number(normalized.slice(0, 4)) >= 1000 ? normalized : null;
 }
 
-function analyzeCsv({ csv, datasetType, mapping: requestedMapping, dateFormat = 'auto' } = {}) {
+function analyzeCsv({ csv, datasetType, mapping: requestedMapping, dateFormat = 'auto', valueMapping } = {}) {
   const repaired = repairCsv(csv);
   const { rows, lines, ...result } = repaired;
   result.datasetType = datasetType;
@@ -93,6 +94,7 @@ function analyzeCsv({ csv, datasetType, mapping: requestedMapping, dateFormat = 
   result.mappedCsv = null;
   result.normalizedDates = 0;
   result.unmappedHeaders = [];
+  result.valueMappings = [];
   const schema = typeof datasetType === 'string' && Object.hasOwn(schemas, datasetType) ? schemas[datasetType] : null;
   if (!schema) {
     result.errors.push({ line: null, message: 'Choose a supported data type.' });
@@ -101,6 +103,10 @@ function analyzeCsv({ csv, datasetType, mapping: requestedMapping, dateFormat = 
   if (!repaired.headers.length || repaired.errors.length) return result;
   if (requestedMapping != null && (typeof requestedMapping !== 'object' || Array.isArray(requestedMapping))) {
     result.errors.push({ line: null, message: 'The column mapping must be an object.' });
+    return result;
+  }
+  if (!isValidValueMapping(valueMapping)) {
+    result.errors.push({ line: null, message: 'The value mapping must be an object.' });
     return result;
   }
   for (const field of schema.fields) {
@@ -147,6 +153,13 @@ function analyzeCsv({ csv, datasetType, mapping: requestedMapping, dateFormat = 
     }
     return [field.key, value];
   })));
+  const values = buildValueMappings(schema, result.mapping, mappedRows, valueMapping);
+  result.valueMappings = values.valueMappings;
+  result.errors.push(...values.errors);
+  for (const { field, targets, values: entries } of values.valueMappings) {
+    const targetBySource = new Map(entries.filter(entry => targets.includes(entry.target)).map(entry => [entry.source, entry.target]));
+    for (const row of mappedRows) if (targetBySource.has(row[field])) row[field] = targetBySource.get(row[field]);
+  }
   result.preview = mappedRows.slice(0, 10);
   if (!result.errors.length) result.mappedCsv = stringifyCsv([
     schema.fields.map(field => field.key), ...mappedRows.map(row => schema.fields.map(field => row[field.key]))
