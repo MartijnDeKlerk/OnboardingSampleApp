@@ -27,11 +27,12 @@ test('repairs a sample, exports quoted CSV, saves mapping and restores it after 
   const downloadedCsv = fs.readFileSync(await download.path(), 'utf8');
   expect(downloadedCsv).toContain('"Williams, Robert"');
   await page.getByRole('button', { name: 'Save mapping for customer', exact: true }).click();
-  await expect(page.getByText(/Data Mapping is complete. Onboarding progress: 50%/)).toBeVisible();
+  await expect(page.getByText(/Mapped 1 of 4 data types\. Still needed: Contacts, Chart of accounts, Transactions\. Onboarding progress: 25%/)).toBeVisible();
   await page.getByRole('button', { name: 'Dashboard', exact: true }).click();
   const card = page.locator('.customer-card').filter({ has: page.getByRole('heading', { name: customer.name, exact: true }) });
-  await expect(card).toContainText('50%');
-  await expect(card.locator('.step-status.completed')).toHaveCount(2);
+  await expect(card).toContainText('25%');
+  await expect(card.locator('.step-status.completed')).toHaveCount(1);
+  await expect(card).toContainText('in progress');
   await page.reload();
   await page.getByRole('button', { name: 'Data Mapping', exact: true }).click();
   await page.getByLabel('Customer', { exact: true }).selectOption(customer.id);

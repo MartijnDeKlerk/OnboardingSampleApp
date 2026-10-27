@@ -152,7 +152,11 @@ export default function DataMappingTab({ selectedCustomerId, onSelectCustomer, o
         body: JSON.stringify({ ...requestBody(), fileName, acceptRepairs, acceptUnmapped })
       });
       setSavedMappings(current => [...current.filter(item => item.datasetType !== saved.mapping.datasetType), saved.mapping]);
-      setNotice(`Saved ${saved.mapping.totalRows} rows for ${customers.find(customer => customer.id === customerId)?.name || 'this customer'}. Data Mapping is complete. Onboarding progress: ${saved.onboarding.progressPercent}%.`);
+      const customerName = customers.find(customer => customer.id === customerId)?.name || 'this customer';
+      const progress = saved.dataMapping && !saved.dataMapping.complete
+        ? `Mapped ${saved.dataMapping.mapped.length} of ${saved.dataMapping.required.length} data types. Still needed: ${saved.dataMapping.required.filter(type => !saved.dataMapping.mapped.includes(type)).map(type => options.datasets.find(dataset => dataset.id === type)?.label || type).join(', ')}.`
+        : 'Data Mapping is complete.';
+      setNotice(`Saved ${saved.mapping.totalRows} rows for ${customerName}. ${progress} Onboarding progress: ${saved.onboarding.progressPercent}%.`);
       onSaved();
     } catch (err) { setError(err.message); }
     finally { setBusy(false); }

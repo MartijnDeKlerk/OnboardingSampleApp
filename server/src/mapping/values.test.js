@@ -52,9 +52,9 @@ const EXPECTED = {
     Check: 'Check', CHECK: 'Check', Cheque: 'Check',
     'Credit Card': 'Credit Card', CARD: 'Credit Card', 'Card Payment': 'Credit Card', 'Online Payment': 'Credit Card',
     Cash: 'Cash', CASH: 'Cash', 'Petty Cash': 'Cash',
-    'Bank Transfer': 'Bank Transfer', BANK: 'Bank Transfer', Bank: 'Bank Transfer', 'Bank Charge': 'Bank Transfer',
-    FEE: 'Bank Transfer', 'Standing Order': 'Bank Transfer', Financing: 'Bank Transfer', LEASE: 'Bank Transfer',
-    HP: 'Bank Transfer', 'Journal Entry': 'Bank Transfer', JE: 'Bank Transfer'
+    'Bank Transfer': 'Bank Transfer', BANK: 'Bank Transfer', Bank: 'Bank Transfer', 'Bank Charge': 'Other',
+    FEE: 'Other', 'Standing Order': 'Bank Transfer', Financing: 'Other', LEASE: 'Other',
+    HP: 'Other', 'Journal Entry': 'Other', JE: 'Other'
   }
 };
 

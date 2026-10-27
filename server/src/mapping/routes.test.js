@@ -42,7 +42,7 @@ describe('Data Mapping API', () => {
     assert.equal(store.getOnboardingState('cust_001').progressPercent, 0);
   });
 
-  it('requires acceptance of proposed repairs, then saves original and prepared CSVs at 50%', async () => {
+  it('requires acceptance of proposed repairs, then saves original and prepared CSVs (1 of 4 types: 25%)', async () => {
     const created = await (await post('/api/customers', { name: 'Mapping Test', contactEmail: 'cs@example.com' })).json();
     customerId = created.customer.id;
     const rejected = await post(`/api/customers/${customerId}/mappings`, sample);
@@ -55,7 +55,9 @@ describe('Data Mapping API', () => {
     assert.equal(saved.mapping.originalCsv, sample.csv);
     assert.ok(saved.mapping.correctedCsv.includes('"Williams, Robert"'));
     assert.ok(saved.mapping.mappedCsv.startsWith('id,name,'));
-    assert.equal(saved.onboarding.progressPercent, 50);
+    assert.equal(saved.onboarding.progressPercent, 25);
+    assert.equal(saved.onboarding.steps[1].status, 'in_progress');
+    assert.deepEqual(saved.dataMapping, { required: ['clients', 'contacts', 'accounts', 'transactions'], mapped: ['clients'], complete: false });
     assert.equal(saved.onboarding.steps[2].status, 'pending');
     assert.equal(saved.onboarding.steps[3].status, 'pending');
     const restored = await (await fetch(`${baseURL}/api/customers/${customerId}/mappings`)).json();
@@ -70,7 +72,7 @@ describe('Data Mapping API', () => {
     });
     assert.equal(response.status, 400);
     assert.equal(store.getCustomerMappings(customerId)[0].totalRows, 12);
-    assert.equal(store.getOnboardingState(customerId).progressPercent, 50);
+    assert.equal(store.getOnboardingState(customerId).progressPercent, 25);
   });
 
   it('requires explicit acceptance before excluding source columns', async () => {
@@ -116,5 +118,21 @@ describe('Data Mapping API', () => {
     assert.equal(malformed.status, 400);
     assert.ok(malformed.headers.get('content-type').includes('application/json'));
     assert.equal((await post('/api/customers/missing/mappings', sample)).status, 404);
+  });
+
+  it('completes Data Mapping only after all four data types are saved', async () => {
+    const created = await (await post('/api/customers', { name: 'All Types Test', contactEmail: 'cs@example.com' })).json();
+    const id = created.customer.id;
+    let saved;
+    for (const type of ['clients', 'contacts', 'accounts', 'transactions']) {
+      const sample = await (await fetch(`${baseURL}/api/mapping/samples/abc-${type}`)).json();
+      const response = await post(`/api/customers/${id}/mappings`, { ...sample, acceptRepairs: true, acceptUnmapped: true });
+      assert.equal(response.status, 200, type);
+      saved = await response.json();
+      if (type !== 'transactions') assert.equal(saved.onboarding.steps[1].status, 'in_progress', type);
+    }
+    assert.equal(saved.dataMapping.complete, true);
+    assert.equal(saved.onboarding.steps[1].status, 'completed');
+    assert.equal(saved.onboarding.progressPercent, 50);
   });
 });

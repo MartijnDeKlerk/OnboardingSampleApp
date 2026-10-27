@@ -99,10 +99,14 @@ function saveDataMapping(customerId, mapping) {
   const index = store.dataMappings.findIndex(item => item.customerId === customerId && item.datasetType === saved.datasetType);
   if (index === -1) store.dataMappings.push(saved);
   else store.dataMappings[index] = saved;
+  // Import needs every data type, so Data Mapping completes only once all are saved.
+  const mapped = getCustomerMappings(customerId).map(item => item.datasetType);
+  const required = Object.keys(require('../mapping/schemas').schemas);
+  const complete = required.every(type => mapped.includes(type));
   const current = getOnboardingState(customerId);
-  const steps = current.steps.map(step => step.id === 'step_2' ? { ...step, status: 'completed' } : step);
+  const steps = current.steps.map(step => step.id === 'step_2' ? { ...step, status: complete ? 'completed' : 'in_progress' } : step);
   const onboarding = updateOnboardingState(customerId, { steps, progressPercent: calculateProgress(steps) });
-  return { mapping: saved, onboarding };
+  return { mapping: saved, onboarding, dataMapping: { required, mapped: required.filter(type => mapped.includes(type)), complete } };
 }
 
 function getTenantByCustomerId(customerId) {

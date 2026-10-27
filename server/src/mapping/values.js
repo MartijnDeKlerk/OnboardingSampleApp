@@ -18,7 +18,7 @@ const PICKLISTS = {
   transactions: {
     type: ['Debit', 'Credit'],
     status: ['Completed', 'Pending', 'Cancelled'],
-    paymentMethod: ['Wire Transfer', 'ACH', 'Check', 'Credit Card', 'Cash', 'Bank Transfer']
+    paymentMethod: ['Wire Transfer', 'ACH', 'Check', 'Credit Card', 'Cash', 'Bank Transfer', 'Other']
   }
 };
 
@@ -53,15 +53,16 @@ const transactionStatus = lookup(table({
 
 // README table plus the extra values found in the sample transactions.
 // Electronic bank debits (EFT, BACS, Direct Debit, Direct Deposit) map to ACH;
-// bank-initiated and financed payments (bank fees, interest, standing orders,
-// lease/hire purchase/financing, journal entries) map to Bank Transfer.
+// standing orders map to Bank Transfer. Entries that are not really payments
+// (bank fees, lease/hire purchase/financing, journal entries) map to Other.
 const paymentMethod = lookup(table({
   'Wire Transfer': ['Wire Transfer', 'Wire'],
   ACH: ['ACH', 'EFT', 'BACS', 'Direct Deposit', 'Direct Debit'],
   Check: ['Check', 'Cheque'],
   'Credit Card': ['Credit Card', 'Card', 'Card Payment', 'Online Payment'],
   Cash: ['Cash', 'Petty Cash'],
-  'Bank Transfer': ['Bank Transfer', 'Bank', 'Bank Charge', 'Fee', 'Standing Order', 'Financing', 'Lease', 'HP', 'Hire Purchase', 'Journal Entry', 'JE']
+  'Bank Transfer': ['Bank Transfer', 'Bank', 'Standing Order'],
+  Other: ['Other', 'Bank Charge', 'Fee', 'Financing', 'Lease', 'HP', 'Hire Purchase', 'Journal Entry', 'JE']
 }));
 
 // Reuse the profiling lookup tables for clients/contacts ("Limited Company" ->
